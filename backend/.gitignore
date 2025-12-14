@@ -8,7 +8,12 @@ yarn-error.log*
 logs/
 *.log
 
-public/temp/
+# Ignore everything inside public/temp...
+public/temp/*
+
+# ...EXCEPT the .gitkeep file (so the folder structure stays)
+!public/temp/.gitkeep
+
 uploads/
 
 .DS_Store

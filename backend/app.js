@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import capsuleRoutes from './routes/capsuleRoutes.js';
 import recipientRoutes from './routes/recipientRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import { checkUnlocks } from './controllers/capsuleController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,10 +30,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/capsules', capsuleRoutes);
 app.use('/api/recipients', recipientRoutes);
 app.use('/api/events', eventRoutes);
-
+app.get('/api/cron/check-unlocks', checkUnlocks);
 app.get('/', (req, res) => {
-  res.send('⏳ TimeCapsule API is running...');
+  res.send(' TimeCapsule API is running...');
 });
+
+
 
 export default app;
 

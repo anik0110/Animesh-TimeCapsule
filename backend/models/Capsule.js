@@ -1,23 +1,39 @@
 import mongoose from 'mongoose';
 
-const CapsuleSchema = new mongoose.Schema({
+const capsuleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   message: { type: String, required: true },
-  
   file: { type: String },
-  fileType: { type: String, enum: ['image', 'video', 'audio', 'none'], default: 'none' },
-
+  fileType: { type: String }, 
   unlockDate: { type: Date, required: true },
-  theme: { 
-    type: String, 
-    enum: ['Childhood', 'Family History', 'College Years', 'Love', 'General'],
-    default: 'General'
-  },
+  theme: { type: String, default: 'general' },
+  creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   
-  creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  recipients: [{ name: String, email: String }], 
   
-  createdAt: { type: Date, default: Date.now }
+  recipients: [{
+    name: String,
+    email: String,
+    status: { type: String, default: 'sent' }
+  }],
+
+  
+  comments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: String,
+    text: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  
+  
+  reactions: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    type: String 
+  }],
+
+  
+  isUnlockedNotified: { type: Boolean, default: false },
+
+  createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('Capsule', CapsuleSchema);
+export default mongoose.model('Capsule', capsuleSchema);
