@@ -19,6 +19,16 @@ export const createCapsule = async (req, res) => {
     const { title, message, unlockDate, theme, recipients } = req.body;
     console.log(" Raw Recipients from Frontend:", recipients); 
 
+    // ✅ FIX 1: TIMEZONE CORRECTION (IST to UTC)
+    // Server is UTC. You are in IST (+5:30).
+    // We subtract 5.5 hours so the server stores the correct UTC moment.
+    const userDate = new Date(unlockDate);
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const adjustedDate = new Date(userDate.getTime() - istOffset);
+
+    console.log(`🕒 Input Date (IST): ${userDate.toISOString()}`);
+    console.log(`🕒 Stored Date (UTC): ${adjustedDate.toISOString()}`);
+
     let fileUrl = null;
     let fileType = 'none';
 
@@ -37,12 +47,10 @@ export const createCapsule = async (req, res) => {
 
     if (recipients) {
       try {
-        
         const parsed = typeof recipients === 'string' ? JSON.parse(recipients) : recipients;
         console.log("🧩 Parsed JSON:", parsed);
 
         const recipientArray = Array.isArray(parsed) ? parsed : [parsed];
-        
         
         selectedRecipients = recipientArray.map(r => ({
           name: r.name || 'Friend',
@@ -51,7 +59,6 @@ export const createCapsule = async (req, res) => {
         }));
         console.log("🗂️ Mapped Recipients:", selectedRecipients);
 
-        
         recipientEmails = selectedRecipients
             .map(r => r.email)
             .filter(e => e && e.includes('@')); 
@@ -63,13 +70,12 @@ export const createCapsule = async (req, res) => {
       }
     }
 
-    
     const newCapsule = new Capsule({
       title,
       message,
       file: fileUrl,
       fileType: fileType,
-      unlockDate,
+      unlockDate: adjustedDate, // 👈 USING CORRECTED DATE
       theme,
       recipients: selectedRecipients, 
       creator: req.user.id,
@@ -78,7 +84,7 @@ export const createCapsule = async (req, res) => {
     await newCapsule.save();
     console.log(" Capsule Saved to DB");
 
-    
+    // Send "Locked" Notification (Optional)
     if (recipientEmails.length > 0) {
       const user = await User.findById(req.user.id);
       console.log(" Attempting to send email via Nodemailer...");
@@ -86,7 +92,7 @@ export const createCapsule = async (req, res) => {
       await sendNotificationEmail(
           recipientEmails, 
           user ? user.username : "A Friend", 
-          unlockDate
+          adjustedDate // Use the adjusted date in email too
       );
     } else {
       console.log(" SKIPPING EMAIL: 'recipientEmails' array is empty.");
@@ -107,7 +113,6 @@ export const getReceivedCapsules = async (req, res) => {
     const currentUser = await User.findById(req.user.id);
     if (!currentUser) return res.status(404).send("User not found");
 
-    
     const capsules = await Capsule.find({ 
       "recipients.email": currentUser.email 
     }).populate('creator', 'username'); 
@@ -128,7 +133,6 @@ export const addComment = async (req, res) => {
 
     if (!capsule) return res.status(404).send("Capsule not found");
 
-    
     if (new Date(capsule.unlockDate) > new Date()) {
       return res.status(403).json({ msg: "Capsule is locked!" });
     }
@@ -181,21 +185,29 @@ export const getAIAssistance = async (req, res) => {
 
 export const checkUnlocks = async (req, res) => {
   try {
+    const now = new Date();
+    // Debug Log: Show IST equivalent to help you verify
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    console.log("⏰ CRON RUNNING | UTC:", now.toISOString(), "| IST:", istTime.toISOString().replace('Z', ''));
+
     const capsules = await Capsule.find({
-      unlockDate: { $lte: new Date() },
+      unlockDate: { $lte: now },
       isUnlockedNotified: false
     }).populate('creator', 'username');
 
     let count = 0;
     for (const cap of capsules) {
-      const recipientEmails = cap.recipients.map(r => r.email).filter(e => e);
+      console.log(`🚀 Unlocking Capsule: ${cap.title}`);
+      
+      // Handle recipients (support string or object structure)
+      const recipientEmails = cap.recipients.map(r => r.email || r).filter(e => e);
       
       if(recipientEmails.length > 0) {
           await sendNotificationEmail(
             recipientEmails, 
-            cap.creator.username, 
+            cap.creator ? cap.creator.username : "A Friend", 
             cap.unlockDate, 
-            "Your Time Capsule is now UNLOCKED! 🔓"
+            "Your Time Capsule is now UNLOCKED! 🔓" // Custom Subject
           );
       }
       cap.isUnlockedNotified = true;
@@ -210,7 +222,6 @@ export const checkUnlocks = async (req, res) => {
 };
 
 
-
 export const deleteCapsule = async (req, res) => {
   try {
     console.log(`🗑️ DELETE REQUEST: ID ${req.params.id}`);
@@ -221,19 +232,18 @@ export const deleteCapsule = async (req, res) => {
       return res.status(404).json({ msg: 'Capsule not found' });
     }
 
-    
-    if (!capsule.user) {
+    // ✅ FIX 2: Use 'creator' instead of 'user' (matches Schema)
+    if (!capsule.creator) { 
         console.log("⚠️ Alert: Capsule has no owner (Corrupted Data). Deleting...");
         await capsule.deleteOne();
         return res.json({ msg: 'Corrupted capsule removed' });
     }
 
-    
-    console.log(` Owner ID in DB: ${capsule.user.toString()}`);
+    console.log(` Owner ID in DB: ${capsule.creator.toString()}`);
     console.log(` Request User ID: ${req.user.id}`);
 
-    
-    if (capsule.user.toString() !== req.user.id) {
+    // ✅ FIX 3: Authorization Check using 'creator'
+    if (capsule.creator.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
