@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const sendNotificationEmail = async (recipients, senderName, unlockDate, customSubject = null) => {
+
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
   try {
     
     if (!recipients || recipients.length === 0) {
@@ -48,7 +50,7 @@ const sendNotificationEmail = async (recipients, senderName, unlockDate, customS
             ${customSubject ? "The wait is over! Click below to view the message." : "You will receive another email when this memory opens."}
           </p>
 
-          <a href="http://localhost:5173" style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Open TimeCapsule</a>
+          <a href="${FRONTEND_URL}" style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Open TimeCapsule</a>
         </div>
       `,
     };
