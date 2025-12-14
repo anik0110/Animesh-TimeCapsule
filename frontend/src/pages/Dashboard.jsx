@@ -10,6 +10,7 @@ import CapsuleModal from '../components/CapsuleModal';
 const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   
   const [capsules, setCapsules] = useState([]);
@@ -46,16 +47,16 @@ const Dashboard = () => {
 
       try {
         if (view === 'all') {
-          let url = 'http://localhost:5000/api/capsules';
+          let url = `${API_URL}/api/capsules`;
           if (activeTab === 'received') url += '/received';
           const res = await axios.get(url, config);
           setCapsules(res.data);
         }
         
         
-        const eventRes = await axios.get('http://localhost:5000/api/events', config);
+        const eventRes = await axios.get(`${API_URL}/api/events`, config);
         setUpcomingEvents(eventRes.data.filter(e => new Date(e.date) >= new Date().setHours(0,0,0,0)).slice(0, 3));
-        const recipientRes = await axios.get('http://localhost:5000/api/recipients', config);
+        const recipientRes = await axios.get(`${API_URL}/api/recipients`, config);
         setSavedRecipients(recipientRes.data);
 
       } catch (err) { console.error(err); }
@@ -68,7 +69,7 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/capsules/${id}`, {
+      await axios.delete(`${API_URL}/api/capsules/${id}`, {
         headers: { 'x-auth-token': token }
       });
       
@@ -101,7 +102,7 @@ const Dashboard = () => {
     setAiLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/capsules/ai-assist', { promptType, contextText: formData.message }, { headers: { 'x-auth-token': token } });
+      const res = await axios.post(`${API_URL}/api/capsules/ai-assist`, { promptType, contextText: formData.message }, { headers: { 'x-auth-token': token } });
       if (promptType === 'summary') setFormData(prev => ({ ...prev, title: res.data.result }));
       else if (promptType === 'caption') setFormData(prev => ({ ...prev, message: prev.message + `\n\n(AI Caption: ${res.data.result})` }));
     } catch (e) { alert("AI Service Unavailable"); }
@@ -122,7 +123,7 @@ const Dashboard = () => {
         else if (key !== 'file') data.append(key, formData[key]);
       });
 
-      await axios.post('http://localhost:5000/api/capsules', data, { headers: { 'x-auth-token': token, 'Content-Type': 'multipart/form-data' } });
+      await axios.post(`${API_URL}/api/capsules`, data, { headers: { 'x-auth-token': token, 'Content-Type': 'multipart/form-data' } });
       alert('Capsule Sealed & Emails Sent! 📨');
       setFormData({ title: '', message: '', unlockDate: '', theme: 'general', selectedRecipients: [], file: null });
       setView('all'); setActiveTab('created');

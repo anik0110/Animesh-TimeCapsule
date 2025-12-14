@@ -6,6 +6,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     if (token) {
@@ -20,12 +21,12 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
     setToken(res.data.token);
   };
 
   const register = async (username, email, password) => {
-    const res = await axios.post('http://localhost:5000/api/auth/register', { username, email, password });
+    const res = await axios.post(`${API_URL}/api/auth/register`, { username, email, password });
     setToken(res.data.token);
   };
 
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const googleLogin = async (credentialResponse) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/google', {
+      const res = await axios.post(`${API_URL}/api/auth/google`, {
         token: credentialResponse.credential
       });
       

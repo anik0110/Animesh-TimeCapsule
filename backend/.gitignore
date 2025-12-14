@@ -8,10 +8,10 @@ yarn-error.log*
 logs/
 *.log
 
-# Ignore everything inside public/temp...
+
 public/temp/*
 
-# ...EXCEPT the .gitkeep file (so the folder structure stays)
+
 !public/temp/.gitkeep
 
 uploads/

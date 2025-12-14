@@ -4,13 +4,13 @@ import axios from 'axios';
 const CapsuleModal = ({ capsule, onClose }) => {
   const [comment, setComment] = useState('');
   const [commentsList, setCommentsList] = useState(capsule.comments || []);
-
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const handleSendComment = async () => {
     if (!comment.trim()) return;
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `http://localhost:5000/api/capsules/${capsule._id}/comment`, 
+        `${API_URL}/api/capsules/${capsule._id}/comment`, 
         { text: comment },
         { headers: { 'x-auth-token': token } }
       );

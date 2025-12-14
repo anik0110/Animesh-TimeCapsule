@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 const Profile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     
-    axios.get('http://localhost:5000/api/auth/me')
+    axios.get(`${API_URL}/api/auth/me`)
       .then(res => setUser(res.data))
       .catch(err => console.error("Failed to load profile", err));
   }, []);

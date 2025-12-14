@@ -6,6 +6,7 @@ const Recipients = () => {
   const [contacts, setContacts] = useState([]);
   const [newContact, setNewContact] = useState({ name: '', email: '', relation: 'Friend' });
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   
   useEffect(() => {
@@ -14,7 +15,7 @@ const Recipients = () => {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/recipients');
+      const res = await axios.get(`${API_URL}/api/recipients`);
       setContacts(res.data);
     } catch (err) { console.error(err); }
   };
@@ -23,14 +24,14 @@ const Recipients = () => {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newContact.name || !newContact.email) return;
-    await axios.post('http://localhost:5000/api/recipients', newContact);
+    await axios.post(`${API_URL}/api/recipients`, newContact);
     setNewContact({ name: '', email: '', relation: 'Friend' });
     fetchContacts();
   };
 
   
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/recipients/${id}`);
+    await axios.delete(`${API_URL}/api/recipients/${id}`);
     fetchContacts();
   };
 

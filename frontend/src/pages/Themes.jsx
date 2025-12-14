@@ -7,7 +7,7 @@ const Themes = () => {
   const [capsules, setCapsules] = useState([]);
   const [selectedTheme, setSelectedTheme] = useState('All');
   const navigate = useNavigate();
-
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   
   const themes = [
     { name: 'All', color: 'bg-gray-800 text-white', icon: '♾️' },
@@ -19,7 +19,7 @@ const Themes = () => {
   ];
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/capsules')
+    axios.get(`${API_URL}/api/capsules`)
       .then(res => setCapsules(res.data))
       .catch(err => console.error(err));
   }, []);

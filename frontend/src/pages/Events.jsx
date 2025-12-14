@@ -11,12 +11,12 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/events', {
+        const res = await axios.get(`${API_URL}/api/events`, {
           headers: { 'x-auth-token': token }
         });
         setEvents(res.data);
@@ -34,7 +34,7 @@ const Events = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/events', {
+      const res = await axios.post(`${API_URL}/api/events`, {
         title: newEventTitle,
         date: selectedDate
       }, { headers: { 'x-auth-token': token } });
@@ -50,7 +50,7 @@ const Events = () => {
   const handleDeleteEvent = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/events/${id}`, {
+      await axios.delete(`${API_URL}/api/events/${id}`, {
         headers: { 'x-auth-token': token }
       });
       setEvents(events.filter(evt => evt._id !== id));
